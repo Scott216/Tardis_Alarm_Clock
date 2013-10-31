@@ -258,7 +258,7 @@ bool Menu::setNewSound(Adafruit_SSD1306& oled)
 
     oled.clearDisplay();
     oled.setCursor(0,0);
-    oled.println("Pick Sound"); 
+    oled.println(F("Pick Sound")); 
 
     switch (soundMenuID)
     {

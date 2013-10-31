@@ -1,8 +1,6 @@
-/* 
+/*
+  To do - figure out interrupts, only Pin 2 is on a external interrupt pin
 
-
-
- 
 */
 
 #include <EEPROM.h>
@@ -16,31 +14,8 @@
 #include "Accel.h"
 #include "Encoder.h"
 
-#define ENC_A           0   // Encoder input (Interrupt)
-#define ENC_B           1   // Encoder input (Interrupt)
-// D2 & D3 used for I2C
-#define PUSHBTN         4  // Pushbutton in encoder
-#define PCBLEDRED       5  // RGB LED on middle PCB Board to light up windows (PWM)
-#define PCBLEDGRN       6  // RGB LED on middle PCB Board to light up windows (PWM)
 
-#define SND_DATA        7   // Sound card data input
-#define SND_BUSY        8   // Sound card busy output
-
-#define ENCRED          9   // RGB LED in encoder (PWM)
-#define ENCGRN         10   // RGB LED in encoder (PWM)
-#define ENCBLU         11   // RGB LED in encoder (PWM)
-
-#define OLED_RST       12   // OLED reset pin
-#define PCBLEDBLU      13   // RGB LED on middle PCB Board to light up windows (PWM)
-#define MENU_BTN        0   // Analog 0, Menu pushbutton up 520, dn 693, select 1020
-#define ALARM_ON_PIN   A1   // Alarm On/Off switch
-#define SND_RST        A2   // Sound card Reset input
-#define SND_CLK        A3   // Sound card clock input
-
-#define PB_ON HIGH          // Encoder pushbutton is on when HIGH
-
-/*  Pro-Mini pin assignments
-
+//  Pro-Mini pin assignments
 #define ENC_A           2  // Encoder input (Interrupt)
 #define PCBLEDBLU       3  // RGB LED on middle PCB Board to light up windows (PWM)
 #define PUSHBTN         4  // Pushbutton in encoder
@@ -52,6 +27,7 @@
 #define ENCGRN         10  // RGB LED in encoder (PWM)
 #define ENCBLU         11  // RGB LED in encoder (PWM)
 #define ENC_B          12  // Encoder input (Interrupt)
+#define OLED_RST       13  // OLED reset pin
 
          
 #define MENU_BTN       0    // Analog 0, Menu pushbutton up 520, dn 693, select 1020
@@ -60,12 +36,12 @@
 #define SND_CLK        A3   // Sound card clock input
 // I2C SDA             A4
 // I2C SCL             A5
-#define OLED_RST       A6   // OLED reset pin
+//                     A6   // spare, can't be used as digital output.  Could use this for MENU_BTN input or SND_BUSY input if you want to free up a digital pin
 // Photo sensor TBD    A7   // Future use if you want to have a light sensor in order to dim the display
 
-*/
 
-
+#define PB_ON        HIGH   // Encoder pushbutton is on when HIGH
+#define ALARM_ENABLED LOW   // Alarm is enabled when input is low
 #define DISP_CLOCK      1   // display clock time on 7-segment display
 #define DISP_ALARM      2   // display alarm time on 7-segment display
 #define DISP_ALARM_OFF  3   // Alarm is off, display "OFF"
@@ -107,7 +83,6 @@ void pulseRGBLEDs(bool ledsAreOn);
 void setup()
 {
   Serial.begin(9600);
-  while (!Serial && millis() < 5000) {}
   
   pinMode(PUSHBTN, INPUT);         // rotory encoder pushbutton, needs a PULL-DOWN resistor, P/B is on when HIGH
   pinMode(ALARM_ON_PIN, INPUT_PULLUP);  // Alarm enable switch
@@ -117,9 +92,6 @@ void setup()
   pinMode(PCBLEDRED, OUTPUT);     // RGB LED on PCB
   pinMode(PCBLEDGRN, OUTPUT);     // RGB LED on PCB
   pinMode(PCBLEDBLU, OUTPUT);     // RGB LED on PCB
-
-  
-  
 
 
   I2c.begin();             // Join the bus as a master
@@ -140,6 +112,19 @@ void setup()
   // Read alarm time from EEPROM and set variables
   alarmHour = EEPROM.read(ADDR_ALM_HR);
   alarmMinute = EEPROM.read(ADDR_ALM_MN);
+  
+  // Validate alarm values
+  if (alarmHour > 23)
+  { 
+    alarmHour = 8; 
+    EEPROM.write(ADDR_ALM_HR, alarmHour);
+  }
+  if (alarmMinute > 59 )
+  { 
+    alarmMinute = 0;
+    EEPROM.write(ADDR_ALM_MN, alarmMinute);
+  }
+  
   
   // Read sound ID from EEPROM  
   soundId = EEPROM.read(ADDR_SOUND);
@@ -173,15 +158,15 @@ void loop()
   // display alarm setting 
   if ( digitalRead(PUSHBTN) == PB_ON && Speaker.isBusy() == false )
   {
-    if ( digitalRead(ALARM_ON_PIN) == LOW )
-    { updateLcdDisplay(DISP_ALARM_OFF); }  // alarm is disabled, display "OFF"
+    if ( digitalRead(ALARM_ON_PIN) == ALARM_ENABLED ) 
+    { updateLcdDisplay(DISP_ALARM); }      // alarm is enabled, display alarm time
     else
-    { updateLcdDisplay(DISP_ALARM); }      // alarm is disabled, display alarm time
+    { updateLcdDisplay(DISP_ALARM_OFF); }  // alarm is disabled, display "OFF"
     delay(2000); // keep the alarm time on the display for a little while
   }
   
   // check for alarm, it will stay on for one minute if not silenced
-  if ( now.hour() == alarmHour && now.minute() == alarmMinute && isAlarmSilenced == false )
+  if ( now.hour() == alarmHour && now.minute() == alarmMinute && isAlarmSilenced == false && digitalRead(ALARM_ON_PIN) == ALARM_ENABLED )
   {
     if(Speaker.isBusy() == false)
     {
@@ -198,7 +183,7 @@ void loop()
   // Checking the accelerometer is a little slow, so we don't want to do it if the alarm isn't sounding
   if ( isAlarmSouding == true )
   {
-    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(2000) || rotEncoder.isTurning(100) )
+    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(1700) || rotEncoder.isTurning(100) )
     {
       Speaker.stop();  // turn off sound
       isAlarmSilenced = true; // flag to prevent alarm from coming right back on 
@@ -290,7 +275,7 @@ void updateLcdDisplay(uint8_t whichTimeToShow)
 
 
 //--------------------------------------------------------------------------------------------------------
-// Start config menu
+// Start config menu that runs on OLED screen on bottom
 //--------------------------------------------------------------------------------------------------------
 void startMenu()
 {
@@ -320,9 +305,6 @@ void startMenu()
     case NEWSOUND:  // changed alarm sound
       soundId = Menu::getSoundId();
       EEPROM.write(ADDR_SOUND, Menu::getSoundId());
-      Serial.print("New sound ");
-      Serial.println(soundId);
-      
       break;
   } // switch()
 
@@ -338,7 +320,7 @@ void setAlarm(uint8_t alarmH, uint8_t alarmM)
   alarmHour = alarmH;
   alarmMinute = alarmM; 
   
-  // write to eeprom
+  // write to EEPROM
   EEPROM.write(ADDR_ALM_HR, alarmHour);
   EEPROM.write(ADDR_ALM_MN, alarmMinute);
 } // setAlarm()
@@ -375,12 +357,16 @@ void pulseRGBLEDs(bool ledsAreOn)
     grnPWMValue = ledOff;
   } 
 
+  // Make LED blue by turing off red and green
+  redPWMValue = ledOff;
+  grnPWMValue = ledOff;
+
   analogWrite(ENCRED, redPWMValue);
   analogWrite(ENCGRN, grnPWMValue);
-  analogWrite(ENCBLU, bluPWMValue/2);
-  analogWrite(PCBLEDRED, (redPWMValue - 255)/2);
-  analogWrite(PCBLEDGRN, (grnPWMValue - 255)/2);
-  analogWrite(PCBLEDBLU, bluPWMValue - 255);
+  analogWrite(ENCBLU, bluPWMValue);
+  analogWrite(PCBLEDRED, 255 - redPWMValue);
+  analogWrite(PCBLEDGRN, 255 - grnPWMValue);
+  analogWrite(PCBLEDBLU, 255 - bluPWMValue);
   
 }  // pulseRGBLEDs()
 

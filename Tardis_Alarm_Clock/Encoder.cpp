@@ -37,13 +37,12 @@ void Encoder::begin(int encPinA, int encPinB)
   B_set = false;
 
 
-  // encoder pin on interrupt 2 
-  attachInterrupt(2, rotatingCW, CHANGE);
+  // encoder pin on interrupt 0 on pin D2
+  attachInterrupt(0, rotatingCW, CHANGE);
 
-  // encoder pin on interrupt 3 
-  attachInterrupt(3, rotatingCCW, CHANGE);
-  
-  Serial.println("Setup encoder");
+  // encoder pin on interrupt 1 on pin D3
+//srg using pin 3 for PWM, can't use for interrupt
+ // attachInterrupt(1, rotatingCCW, CHANGE);
   
 } // begin()
 

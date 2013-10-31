@@ -14,6 +14,11 @@ Snooze function - maybe
  Try using pin change interrupt library: http://code.google.com/p/arduino-pinchangeint/
  to work with encoder on Pro Mini
 
+PCB changes
+OLED - use header with bigger holes
+Move edge connector on bottom
+Move sound card so it's below LED
+
 
 ================
 Accelerometer

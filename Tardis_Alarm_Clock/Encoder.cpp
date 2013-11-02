@@ -41,8 +41,11 @@ void Encoder::begin(int encPinA, int encPinB)
   attachInterrupt(0, rotatingCW, CHANGE);
 
   // encoder pin on interrupt 1 on pin D3
-//srg using pin 3 for PWM, can't use for interrupt
+//srg using pin 3 for PWM, can't use for interrupt.  Need to use PinChangeInt.h  http://code.google.com/p/arduino-pinchangeint/wiki/Usage
  // attachInterrupt(1, rotatingCCW, CHANGE);
+  
+  // http://code.google.com/p/arduino-pinchangeint/wiki/Usage
+  
   
 } // begin()
 
@@ -122,71 +125,6 @@ void Encoder::rotatingCCW()
 
 
 
-/*
-void encoderSetup() {
-
-  pinMode(encoderPinA, INPUT_PULLUP); 
-  pinMode(encoderPinB, INPUT_PULLUP); 
-
-// encoder pin on interrupt 0 (pin 2)
-  attachInterrupt(0, doEncoderA, CHANGE);
-
-// encoder pin on interrupt 1 (pin 3)
-  attachInterrupt(1, doEncoderB, CHANGE);
-
-} // encoderSetup()
-*/
-
-/*
-// main loop, work is done by interrupt service routines, this one only prints stuff
-void checkEncoder() { 
-  rotating = true;  // reset the debouncer
-
-  if (lastReportedPos != encoderPos) {
-    Serial.print("Index:");
-    Serial.println(encoderPos, DEC);
-    lastReportedPos = encoderPos;
-  }
-} 
-*/
-
-/*
-
-// Interrupt on A changing state
-void doEncoderA()
-{
-  // debounce
-  if ( rotating ) delay (1);  // wait a little until the bouncing is done
-
-  // Test transition, did things really change? 
-  if( digitalRead(encoderPinA) != A_set ) 
-  {  // debounce once more
-    A_set = !A_set;
-
-    // adjust counter + if A leads B
-    if ( A_set && !B_set ) 
-      encoderPos += 1;
-
-    rotating = false;  // no more debouncing until loop() hits again
-  }
-} //doEncoderA()
-
-// Interrupt on B changing state, same as A above
-void doEncoderB()
-{
-  if ( rotating ) delay (1);
-  if( digitalRead(encoderPinB) != B_set ) 
-  {
-    B_set = !B_set;
-    //  adjust counter - 1 if B leads A
-    if( B_set && !A_set ) 
-      encoderPos -= 1;
-
-    rotating = false;
-  }
-} //doEncoderB()
-
-*/
 
 
 

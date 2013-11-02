@@ -7,7 +7,7 @@ To avoid conflicts with  I2C which uses Pin 2 & 3, encoder will use interrupts 2
 #define ENCODER_H
 
 #include "Arduino.h"
-
+// #include <PinChangeInt.h>  // http://code.google.com/p/arduino-pinchangeint/wiki/Usage
 
 
 class Encoder

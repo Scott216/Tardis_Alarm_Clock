@@ -102,7 +102,7 @@ void setup()
   Speaker.begin();         // Initialize sound card
   led_display.begin(0x70); // Initialize 7-segment LED display
   Menu::init(display);     // Initialize the OLED display (using namespace)
-  rotEncoder.begin(1,0);   // Initialize rotary encoder, setup pins 0 & 1 as inputs for encoder
+  rotEncoder.begin(ENC_A, ENC_B); // Initialize rotary encoder
 
   // following line sets the RTC to the date & time this sketch was compiled
 //  RTC.adjust(DateTime(__DATE__, __TIME__));
@@ -125,14 +125,15 @@ void setup()
     EEPROM.write(ADDR_ALM_MN, alarmMinute);
   }
   
-  
   // Read sound ID from EEPROM  
   soundId = EEPROM.read(ADDR_SOUND);
   
   isAlarmSilenced = false;  // flag to tell when user silenced alarm
-  pulseRGBLEDs(false);  // turn LEDs off
+  pulseRGBLEDs(false);      // turn LEDs off
+
   
 }  // setup()
+
 
 //--------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------
@@ -178,9 +179,13 @@ void loop()
   }
 
   // Silence alarm
-  // Check pushbutton on encoder and check for movement via accelerometer
+  // User can turn alarm off by:
+  //   1 Encoder pushbutton
+  //   2 Turn encoder knob
+  //   3 Shake tardis
   // IsMovoing has a threshold parameter.  The higher it is the harder you need to shake alarm
   // Checking the accelerometer is a little slow, so we don't want to do it if the alarm isn't sounding
+  // rotEncoder.isTurning() takes mS as a paremeter.  For example 100mS would return true if knob was turned in the last 100 mS
   if ( isAlarmSouding == true )
   {
     if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(1700) || rotEncoder.isTurning(100) )
@@ -189,6 +194,7 @@ void loop()
       isAlarmSilenced = true; // flag to prevent alarm from coming right back on 
       isAlarmSouding = false;
       pulseRGBLEDs(false);
+      Serial.println(F("Alarm silenced by user"));
     } 
     pulseRGBLEDs(true);
   }   

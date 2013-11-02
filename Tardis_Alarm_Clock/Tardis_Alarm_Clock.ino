@@ -183,18 +183,18 @@ void loop()
   //   1 Encoder pushbutton
   //   2 Turn encoder knob
   //   3 Shake tardis
-  // IsMovoing has a threshold parameter.  The higher it is the harder you need to shake alarm
-  // Checking the accelerometer is a little slow, so we don't want to do it if the alarm isn't sounding
+  //  There is a problem with shaking the tardis, the speaker is interferring with the accelerometer.  Need some filtering
+  //     IsMovoing has a threshold parameter.  The higher it is the harder you need to shake alarm
   // rotEncoder.isTurning() takes mS as a paremeter.  For example 100mS would return true if knob was turned in the last 100 mS
   if ( isAlarmSouding == true )
   {
-    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(1700) || rotEncoder.isTurning(100) )
+//    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(2000) || rotEncoder.isTurning(100) )  // Accel is working well becase of speaker
+    if ( digitalRead(PUSHBTN) == PB_ON || rotEncoder.isTurning(100) )
     {
       Speaker.stop();  // turn off sound
       isAlarmSilenced = true; // flag to prevent alarm from coming right back on 
       isAlarmSouding = false;
       pulseRGBLEDs(false);
-      Serial.println(F("Alarm silenced by user"));
     } 
     pulseRGBLEDs(true);
   }   

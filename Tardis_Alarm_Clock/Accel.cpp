@@ -15,6 +15,7 @@ ClockAccel::~ClockAccel()
 
 // Returns true if accelerometer is moving.  
 // You can set the threshold at which this occurs
+// Note Vibrations from the speaker effect this, max delt from speaker is about 500
 bool ClockAccel::isMoving(uint16_t threshold)
 {
   int currentAccelVal[] = {0,0,0};  // Stores the 12-bit signed value
@@ -42,7 +43,19 @@ bool ClockAccel::isMoving(uint16_t threshold)
     if ( abs(maxAccelVal[i] - minAccelVal[i]) >  maxAxisChange )
     { maxAxisChange = abs(maxAccelVal[i] - minAccelVal[i]); }
   }
-
+/* // srg debug
+Serial.print(maxAxisChange); 
+Serial.print("\t");
+if(currentAccelVal[0] > -1) { Serial.print(" ");}
+Serial.print(currentAccelVal[0]);
+Serial.print("\t");
+if(currentAccelVal[0] > -1) { Serial.print(" ");}
+Serial.print(currentAccelVal[1]);
+Serial.print("\t");
+if(currentAccelVal[0] > -1) { Serial.print(" ");}
+Serial.print(currentAccelVal[2]);
+Serial.println();
+*/
   // If any axis was greater then the threshold then we're moving
   if ( maxAxisChange > threshold )
   { return true; }

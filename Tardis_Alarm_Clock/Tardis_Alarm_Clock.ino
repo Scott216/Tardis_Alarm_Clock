@@ -1,6 +1,7 @@
 /*
-  To do - figure out interrupts, only Pin 2 is on a external interrupt pin
-
+Location: 
+cd Dropbox/Arduino/Tardis_Alarm_Clock
+  
 */
 
 #include <EEPROM.h>
@@ -188,7 +189,7 @@ void loop()
   // rotEncoder.isTurning() takes mS as a paremeter.  For example 100mS would return true if knob was turned in the last 100 mS
   if ( isAlarmSouding == true )
   {
-//    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(2000) || rotEncoder.isTurning(100) )  // Accel is working well becase of speaker
+//    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(2000) || rotEncoder.isTurning(100) )  // SRG Accel is working well becase of speaker
     if ( digitalRead(PUSHBTN) == PB_ON || rotEncoder.isTurning(100) )
     {
       Speaker.stop();  // turn off sound

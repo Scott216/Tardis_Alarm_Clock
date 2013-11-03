@@ -1,23 +1,24 @@
  
 Functionality:
 Time is displayed on LCD, there is no AM/PM indication.
-OLED 128x32 screen on the bottom for menu. Here you can set time/alarm and sounds with pushbuttons.
+OLED 128x32 screen on the bottom for menu. Here you can set time/alarm and sounds. To activate OLED menu, press any pushbutton on bottom
 
-Pressing encoder pushbutton will display the alarm time in military time if the alarm is enabled.  If it's disabled it will display "OFF"
+Pressing encoder pushbutton on top will display the alarm time in military time if the alarm is enabled.  If it's disabled it will display "OFF"
 
-When alarm comes on, Tardis sound play from speaker and RGB LED in encoder will flash. 
-To turn alarm off, you can shake Tardis (accelerometer will detect), you can press  encoder knob.
+When alarm comes on,sound plays from speaker and RGB LED in encoder will flash. 
+To turn alarm off you can press or knob on top.  I'd like also like to disable alarm by shaking, but speaker is interfering with accelerometer. 
 
 
 To Do:
 Snooze function - maybe
- Try using pin change interrupt library: http://code.google.com/p/arduino-pinchangeint/
- to work with encoder on Pro Mini
+Filter speaker noise from accelerometer or replace with tilt switch
 
-PCB changes
-OLED - use header with bigger holes
-Move edge connector on bottom
-Move sound card so it's below LED
+
+PCB changes:
+Add mounting holes for 7-segment LED
+See if there are some kind of posts you can make
+Make I2C pull-up to 5 volts and put level shifters in for accelerometer - if you decide to keep accelerometer
+Add a 2nd RGB LED to PCB
 
 
 ================
@@ -50,8 +51,7 @@ Pins B/C/A are encoder output
 RTC
 ==========
 DS1307
-http://www.adafruit.com/products/264
-Need to switch to Cronodot
+
 
 ========== 
 Sound card
@@ -76,14 +76,3 @@ Set Alarm Sound
   Exterminate
 
 
-I/0
-D0-D1   Encoder A/B inputs
-D2-D3   I2C
-D4      Encoder pushbutton
-D5-D8   Sound card
-D9-D11  Encoder RGB LED
-D12     OLED Reset 
-D13     
-A0      Menu pushbuttons
-A1      Alarm on/off switch
-A2      Photo sensor (maybe)

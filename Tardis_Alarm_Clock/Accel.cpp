@@ -15,7 +15,7 @@ ClockAccel::~ClockAccel()
 
 // Returns true if accelerometer is moving.  
 // You can set the threshold at which this occurs
-// Note Vibrations from the speaker effect this, max delt from speaker is about 500
+// Note Vibrations from the speaker effect this
 bool ClockAccel::isMoving(uint16_t threshold)
 {
   int currentAccelVal[] = {0,0,0};  // Stores the 12-bit signed value
@@ -23,12 +23,14 @@ bool ClockAccel::isMoving(uint16_t threshold)
   int maxAccelVal[] = {0,0,0};      // maximum value for accelerometer values
   uint16_t maxAxisChange = 0;       // value of the axis with the maximum accelerometer value
 
-  // Initialize accelerometer values
+  // Initialize min/max accelerometer values to the current values
   readAccelData(currentAccelVal);   
   for ( uint8_t i = 0; i < 3; i++ )
   { minAccelVal[i] = maxAccelVal[i] = currentAccelVal[i]; }
 
-  readAccelData(currentAccelVal);   // Read the x/y/z adc values
+  // Take another accelerometer reading.  Accelerometer is a littls slow to
+  // respond, so there is time for value to change between this read on the initial one. 
+  readAccelData(currentAccelVal);   
   for ( uint8_t i = 0; i < 3; i++ )
     {
       if( currentAccelVal[i] < minAccelVal[i] )
@@ -43,8 +45,9 @@ bool ClockAccel::isMoving(uint16_t threshold)
     if ( abs(maxAccelVal[i] - minAccelVal[i]) >  maxAxisChange )
     { maxAxisChange = abs(maxAccelVal[i] - minAccelVal[i]); }
   }
-/* // srg debug
-Serial.print(maxAxisChange); 
+/*
+// srg debug output
+Serial.print(maxAxisChange);
 Serial.print("\t");
 if(currentAccelVal[0] > -1) { Serial.print(" ");}
 Serial.print(currentAccelVal[0]);

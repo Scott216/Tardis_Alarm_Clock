@@ -189,15 +189,15 @@ void loop()
   // rotEncoder.isTurning() takes mS as a paremeter.  For example 100mS would return true if knob was turned in the last 100 mS
   if ( isAlarmSouding == true )
   {
-//    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(2000) || rotEncoder.isTurning(100) )  // SRG Accel is working well becase of speaker
-    if ( digitalRead(PUSHBTN) == PB_ON || rotEncoder.isTurning(100) )
+    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(300) || rotEncoder.isTurning(100) )  // SRG Accel is working well becase of speaker
     {
       Speaker.stop();  // turn off sound
       isAlarmSilenced = true; // flag to prevent alarm from coming right back on 
       isAlarmSouding = false;
       pulseRGBLEDs(false);
     } 
-    pulseRGBLEDs(true);
+    else
+    { pulseRGBLEDs(true); }
   }   
 
   // After alarm time has passed, turn alarm off (if it's on) and reset flag 

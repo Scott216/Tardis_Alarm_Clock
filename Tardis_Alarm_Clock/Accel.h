@@ -15,7 +15,6 @@ class ClockAccel
     bool begin();
     void readAccelData(int *destination);
     bool isMoving(uint16_t threshold);
-    bool isUpsideDown(uint8_t mountingPosition);
 
   protected:
     void MMA8452Standby();

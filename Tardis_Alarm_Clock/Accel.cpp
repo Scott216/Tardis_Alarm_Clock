@@ -14,51 +14,32 @@ ClockAccel::~ClockAccel()
 }
 
 // Returns true if accelerometer is moving.  
-// You can set the threshold at which this occurs
-// Note Vibrations from the speaker effect this
+// You can set the threshold at which this occurs.  A good threshold is 300
+// Note Vibrations from the speaker effect this, so smoothing algorythm is used
 bool ClockAccel::isMoving(uint16_t threshold)
 {
   int currentAccelVal[] = {0,0,0};  // Stores the 12-bit signed value
-  int minAccelVal[] = {0,0,0};      // minimum value for accelerometer values
-  int maxAccelVal[] = {0,0,0};      // maximum value for accelerometer values
+  int filteredAccelVal[] = {0,0,0};   // filter accelerometer values
   uint16_t maxAxisChange = 0;       // value of the axis with the maximum accelerometer value
-
-  // Initialize min/max accelerometer values to the current values
-  readAccelData(currentAccelVal);   
-  for ( uint8_t i = 0; i < 3; i++ )
-  { minAccelVal[i] = maxAccelVal[i] = currentAccelVal[i]; }
-
-  // Take another accelerometer reading.  Accelerometer is a littls slow to
-  // respond, so there is time for value to change between this read on the initial one. 
-  readAccelData(currentAccelVal);   
-  for ( uint8_t i = 0; i < 3; i++ )
-    {
-      if( currentAccelVal[i] < minAccelVal[i] )
-      { minAccelVal[i] = currentAccelVal[i]; }
-      if( currentAccelVal[i] > maxAccelVal[i] )
-      { maxAccelVal[i] = currentAccelVal[i]; }
-    }
-
-  // see which axis had the most change
-  for ( uint8_t i = 0; i < 3; i++ )
+  float filterVal = 0.9;    // smooth the incomming data.  O = no smoothing, 1 = infinite smoothing
+  
+  for(int k = 0; k < 15; k++)  // take multiple samples
   {
-    if ( abs(maxAccelVal[i] - minAccelVal[i]) >  maxAxisChange )
-    { maxAxisChange = abs(maxAccelVal[i] - minAccelVal[i]); }
+    readAccelData(currentAccelVal);   // Read accelerometer values
+    // Filter the valuse.  Numbers added to currentAccelVal try to normalize to zero when still
+    filteredAccelVal[0] = ( (currentAccelVal[0] +   48) * (1 - filterVal)) + (filteredAccelVal[0] * filterVal); 
+    filteredAccelVal[1] = ( (currentAccelVal[1] -   15) * (1 - filterVal)) + (filteredAccelVal[1] * filterVal); 
+    filteredAccelVal[2] = ( (currentAccelVal[2] - 1000) * (1 - filterVal)) + (filteredAccelVal[2] * filterVal); 
   }
-/*
-// srg debug output
-Serial.print(maxAxisChange);
-Serial.print("\t");
-if(currentAccelVal[0] > -1) { Serial.print(" ");}
-Serial.print(currentAccelVal[0]);
-Serial.print("\t");
-if(currentAccelVal[0] > -1) { Serial.print(" ");}
-Serial.print(currentAccelVal[1]);
-Serial.print("\t");
-if(currentAccelVal[0] > -1) { Serial.print(" ");}
-Serial.print(currentAccelVal[2]);
-Serial.println();
-*/
+  
+  // see which axis had the most change
+  for ( int i = 0; i < 3; i++ )
+  {
+    filteredAccelVal[i] = abs(filteredAccelVal[i]); // make everything positive
+    if ( filteredAccelVal[i] > maxAxisChange )
+    { maxAxisChange = filteredAccelVal[i]; }
+  }
+
   // If any axis was greater then the threshold then we're moving
   if ( maxAxisChange > threshold )
   { return true; }
@@ -66,50 +47,6 @@ Serial.println();
   { return false; }
 
 } // isMoving()
-
-
-// Returns true if the accelerometer is upside down.  
-bool ClockAccel::isUpsideDown(uint8_t mountingPosition)
-{
-  int accelCount[] = {0,0,0};  // Stores the 12-bit signed value
-  readAccelData(accelCount);  // Read the x/y/z adc values
-
-  switch( mountingPosition )
-  {
-    case 1: // horizantal
-      if ( accelCount[2] < -700 )
-      { return true; }
-      else
-      { return false; }
-      break;
-    case 2: // vertical pins on top 
-      if ( accelCount[0] > 700 )
-      { return true; }
-      else
-      { return false; }
-      break;
-    case 3: // vertical pins on bottom 
-      if ( accelCount[0] < -700 )
-      { return true; }
-      else
-      { return false; }
-      break;
-    case 4: // vertical pins on right side - if looking at top of PCB 
-      if ( accelCount[1] > 700 )
-      { return true; }
-      else
-      { return false; }
-      break;
-    case 5: // vertical pins on left side - if looking at top of PCB 
-      if ( accelCount[1] < -700 )
-      { return true; }
-      else
-      { return false; }
-      break;
-  }
-}  // isUpsideDown
-
-
 
 // Initialize the MMA8452 registers 
 // See the many application notes for more info on setting all of these registers:

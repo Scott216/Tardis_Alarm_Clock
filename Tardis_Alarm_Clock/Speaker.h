@@ -29,7 +29,7 @@ Sometimes you many need a short delay after you start a song.
 #include "Arduino.h"
 
 // Index number for sounds
-// Make sure you files are numbered sequentially without any missing numbers
+// Make sure the files on the MicroSD card are numbered sequentially without any missing numbers
 #define TARDIS      0x0000
 #define THEMESONG   0x0001
 #define EXTERMINATE 0x0002

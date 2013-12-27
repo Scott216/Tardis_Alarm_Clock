@@ -5,26 +5,26 @@ OLED 128x32 screen on the bottom for menu. Here you can set time/alarm and sound
 
 Pressing encoder pushbutton on top will display the alarm time in military time if the alarm is enabled.  If it's disabled it will display "OFF"
 
-When alarm comes on,sound plays from speaker and RGB LED in encoder will flash. 
-To turn alarm off you can press or knob on top.  I'd like also like to disable alarm by shaking, but speaker is interfering with accelerometer. 
+When alarm comes on, sound plays from speaker and RGB LED in encoder will pulse. 
+To turn alarm off you can press or knob on top or shaking the tardis.
 
 
 To Do:
 Snooze function - maybe
-Filter speaker noise from accelerometer or replace with tilt switch
 
 
 PCB changes:
-Add mounting holes for 7-segment LED
-See if there are some kind of posts you can make
-Make I2C pull-up to 5 volts and put level shifters in for accelerometer - if you decide to keep accelerometer
+Add level shifter for I2C
+Test shake switch
 Add a 2nd RGB LED to PCB
+Add 5-pin jet for USB cable
+Put 2nd interrupts on encoder since you'll free up 3 PWM pins
 
 
 ================
 Accelerometer
 ================
-Accelerometer setup  
+Accelerometer Wiring  
 MMA8452-------- Arduino
 3.3V --------------- 3.3V
 SDA ----------------- A4
@@ -42,7 +42,7 @@ If you keep having I2C problems, you may want use this analog output acceleromet
 ============
 Encoder
 ============
-Sparkfun RGB rotory encoder with switch: http://www.sparkfun.com/products/10982
+Sparkfun RGB rotary encoder with switch: http://www.sparkfun.com/products/10982
 Breakout board: http://www.sparkfun.com/products/11722
 Source for code: http://arduino.cc/playground/Main/RotaryEncoders#Example15
 Pins B/C/A are encoder output 
@@ -50,7 +50,7 @@ Pins B/C/A are encoder output
 ========== 
 RTC
 ==========
-DS1307
+
 
 
 ========== 
@@ -67,12 +67,6 @@ files have to be named 0000.ad4,  0001.ad4 etc.
 play file using sendCommand(0x0001);
 
 
-Config Menu for OLED screen
-Set Alarm 
-Set Time
-Set Alarm Sound
-  Tardis
-  Theme Song
-  Exterminate
+
 
 

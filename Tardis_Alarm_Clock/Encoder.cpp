@@ -22,10 +22,8 @@ Encoder::~Encoder()
 // Setup encoder pins
 void Encoder::begin(int encPinA, int encPinB)
 {
-  
   encoderPinA = encPinA;
   encoderPinB = encPinB;
-  
   
   pinMode(encoderPinA, INPUT_PULLUP); 
   pinMode(encoderPinB, INPUT_PULLUP);
@@ -36,7 +34,6 @@ void Encoder::begin(int encPinA, int encPinB)
   A_set = false;              
   B_set = false;
 
-
   // encoder pin on interrupt 0 on pin D2
   attachInterrupt(0, rotatingCW, CHANGE);
 
@@ -45,7 +42,6 @@ void Encoder::begin(int encPinA, int encPinB)
  // attachInterrupt(1, rotatingCCW, CHANGE);
   
   // http://code.google.com/p/arduino-pinchangeint/wiki/Usage
-  
   
 } // begin()
 

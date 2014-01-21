@@ -16,7 +16,7 @@ void Menu::init(Adafruit_SSD1306& oled)
 
 
 
-// If a menu button is pressed, then the main sketch will call this function to 
+// If a menu button is pressed, then the main sketch will call this function 
 // and will get the menu process started
 int8_t Menu::changeSettings(Adafruit_SSD1306& oled, uint8_t clockHr, uint8_t clockMin, uint8_t alarmHr, uint8_t alarmMin)
 {

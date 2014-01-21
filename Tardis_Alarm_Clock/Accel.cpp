@@ -7,7 +7,6 @@ ClockAccel::ClockAccel()
 }
 
 
-
 // Destructor
 ClockAccel::~ClockAccel()
 {

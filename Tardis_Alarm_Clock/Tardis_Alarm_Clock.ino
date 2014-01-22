@@ -132,7 +132,6 @@ void setup()
   isAlarmSilenced = false;  // flag to tell when user silenced alarm
   pulseRGBLEDs(false);      // turn LEDs off
 
-  
 }  // setup()
 
 

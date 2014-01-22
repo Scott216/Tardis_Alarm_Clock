@@ -1,3 +1,5 @@
+To Do:
+Test for changes made to encoder.cpp and .h. on 1/21/14 I moved A_set, B_set, rotating, encoderPinA, encoderPinB into .h file, protected section. 
  
 Functionality:
 Time is displayed on LCD, there is no AM/PM indication.

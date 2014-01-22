@@ -1,12 +1,13 @@
 #include "Encoder.h"
 
-boolean rotating;   // debounce management
-boolean A_set;  
-boolean B_set;
+boolean Encoder::rotating;   // debounce management
+boolean Encoder::A_set;
+boolean Encoder::B_set;
 volatile int encoderPos;             // a counter for the dial
 volatile uint32_t lastRotatedTime;   // millis timestamp when encoder was last turned
-int encoderPinA;
-int encoderPinB;
+int Encoder::encoderPinA;
+int Encoder::encoderPinB;
+
 
 void doEncoderA();
 void doEncoderB();
@@ -22,17 +23,17 @@ Encoder::~Encoder()
 // Setup encoder pins
 void Encoder::begin(int encPinA, int encPinB)
 {
-  encoderPinA = encPinA;
-  encoderPinB = encPinB;
+  Encoder::encoderPinA = encPinA;
+  Encoder::encoderPinB = encPinB;
   
-  pinMode(encoderPinA, INPUT_PULLUP); 
-  pinMode(encoderPinB, INPUT_PULLUP);
+  pinMode(Encoder::encoderPinA, INPUT_PULLUP); 
+  pinMode(Encoder::encoderPinB, INPUT_PULLUP);
   resetValue();
-  rotating = false;
+  Encoder::rotating = false;
   lastRotatedTime = 0;
   // interrupt service routine vars
-  A_set = false;              
-  B_set = false;
+  Encoder::A_set = false;
+  Encoder::B_set = false;
 
   // encoder pin on interrupt 0 on pin D2
   attachInterrupt(0, rotatingCW, CHANGE);
@@ -48,13 +49,13 @@ void Encoder::begin(int encPinA, int encPinB)
 
 int Encoder::currentValue()
 {
-  rotating = true;  // reset the debouncer
+  Encoder::rotating = true;  // reset the debouncer
   return encoderPos;
 }
 
 int Encoder::previousValue()
 {
-  rotating = true;  // reset the debouncer
+  Encoder::rotating = true;  // reset the debouncer
   return lastReportedPos;
 }
 
@@ -69,7 +70,7 @@ void Encoder::resetValue()
 // See if the encoder was moved recentlty base on timeTrheshold in mS
 bool Encoder::isTurning(uint32_t timeThreshold)
 {
-  rotating = true;  // reset the debouncer
+  Encoder::rotating = true;  // reset the debouncer
   
   if ((long)(millis() - lastRotatedTime) > timeThreshold)
   { return false; }
@@ -82,40 +83,40 @@ bool Encoder::isTurning(uint32_t timeThreshold)
 void Encoder::rotatingCW()
 {
   // debounce
-  if ( rotating ) delay (1);  // wait a little until the bouncing is done
+  if ( Encoder::rotating ) delay (1);  // wait a little until the bouncing is done
   
   // Test transition, did things really change? 
-  if( digitalRead(encoderPinA) != A_set ) 
+  if( digitalRead(Encoder::encoderPinA) != A_set ) 
   {  // debounce once more
-    A_set = !A_set;
+    Encoder::A_set = !Encoder::A_set;
 
     // adjust counter + if A leads B
-    if ( A_set && !B_set ) 
+    if ( Encoder::A_set && !Encoder::B_set ) 
     {  
       encoderPos += 1; 
       lastRotatedTime = millis();
     }
-    rotating = false;  // no more debouncing until loop() hits again
+    Encoder::rotating = false;  // no more debouncing until loop() hits again
   }
   
 } // rotatingCW
 
 void Encoder::rotatingCCW()
 {
-  if ( rotating ) delay (1);  // wait a little until the bouncing is done
+  if ( Encoder::rotating ) delay (1);  // wait a little until the bouncing is done
   
   // Test transition, did things really change? 
-  if( digitalRead(encoderPinB) != B_set ) 
+  if( digitalRead(Encoder::encoderPinB) != Encoder::B_set ) 
   {  // debounce once more
-    B_set = !B_set;
+    Encoder::B_set = !Encoder::B_set;
     
     //  adjust counter - 1 if B leads A
-    if( B_set && !A_set ) 
+    if( Encoder::B_set && !Encoder::A_set ) 
     { 
       encoderPos -= 1; 
       lastRotatedTime = millis();
     }
-    rotating = false;
+    Encoder::rotating = false;
   }
 }  // rotatingCCW()
 

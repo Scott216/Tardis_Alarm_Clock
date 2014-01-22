@@ -20,12 +20,18 @@ class Encoder
     int previousValue();
     void resetValue();  // set encoder value to zero
     bool isTurning(uint32_t timeThreshold);
+    
 
   protected:
     int lastReportedPos;      // change management
     // Set interrupt functions
     static void rotatingCW();  // Static function is referenced without making an instance of the class.  See: http://stackoverflow.com/questions/4124102/whats-a-static-method-in-c
     static void rotatingCCW();
+    static boolean A_set;
+    static boolean B_set;
+    static boolean rotating;
+    static int encoderPinA;
+    static int encoderPinB;
     
 };
 

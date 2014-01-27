@@ -64,7 +64,6 @@ DateTime now;
 Encoder rotEncoder;
 
 
-uint32_t dispRefreshTimer;   // Update LCD every second
 uint8_t alarmHour;
 uint8_t alarmMinute;
 uint8_t snoozeHour;
@@ -107,8 +106,6 @@ void setup()
 
   // following line sets the RTC to the date & time this sketch was compiled
 //  RTC.adjust(DateTime(__DATE__, __TIME__));
-
-  dispRefreshTimer = millis() + 1000; // Initialize 7seg refresh timer
   
   // Read alarm time from EEPROM and set variables
   alarmHour = EEPROM.read(ADDR_ALM_HR);
@@ -140,6 +137,7 @@ void setup()
 void loop()
 {  
   static bool isAlarmSouding; 
+  static uint32_t dispRefreshTimer = millis() + 1000; // Initialize 7seg refresh timer
   
   // Once a second update LCD display with current time
   if ( (long)(millis() - dispRefreshTimer) > 0 )
@@ -287,30 +285,26 @@ void startMenu()
 {
   DateTime now = RTC.now();
 
-  uint8_t newHour;
-  uint8_t newMinute;
   
   // Start menu process
   // need to pass the alarm time and clock time so the menu knows what to display if either is changed
-  int8_t menuResponse = Menu::changeSettings(display, now.hour(), now.minute(), alarmHour, alarmMinute);  
+  int8_t menuResponse = Menu::changeSettings(display, now.hour(), now.minute(), alarmHour, alarmMinute);
   switch (menuResponse)
   {
     case NOCHANGE:  // No changes were made with menu
       break;
-    case NEWTIME:  // changed clock time
-      // Set RTC time
-      newHour =   Menu::getClockHour();
-      newMinute = Menu::getClockMinute();
-      RTC.adjust(DateTime(now.year(), now.month(), now.day(), newHour, newMinute, 1 ));
+    case NEWTIME:  // Uptdate time in RTC
+      RTC.adjust(DateTime(now.year(), now.month(), now.day(), Menu::getClockHour(), Menu::getClockMinute(), 1 ));
       break;
-    case NEWALARM:  // changed alarm time
-      // Update alarm variables and store in EEPROM
+    case NEWALARM:  // Change alarm time
       setAlarm(Menu::getAlarmHour(), Menu::getAlarmMinute());
       isAlarmSilenced = false; // reset alarm flag
       break;
     case NEWSOUND:  // changed alarm sound
       soundId = Menu::getSoundId();
       EEPROM.write(ADDR_SOUND, Menu::getSoundId());
+      break;
+    default:
       break;
   } // switch()
 

@@ -2,7 +2,13 @@
 Location: 
 cd Dropbox/Arduino/Tardis_Alarm_Clock
   
+ 
+Change Log
+09/23/14 v2.00 - Added version
+ 
 */
+
+#define VERSION "v2.00"
 
 #include <EEPROM.h>
 #include <I2C.h>                         // http://dsscircuits.com/articles/arduino-i2c-master-library.html
@@ -218,7 +224,7 @@ void loop()
 void updateLcdDisplay(uint8_t whichTimeToShow)
 {
   int dispTime; // this is an integer with same digits as the time.  If time is 11:30, dispTime = 1130
-  uint8_t brightness; 
+  uint8_t brightness;       // used to dim the display
   uint8_t dispHr, dispMin;  // holds either clock or alarm hours and minutes
 
 

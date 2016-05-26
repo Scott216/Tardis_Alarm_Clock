@@ -55,6 +55,7 @@ void    displayTopLevel(Adafruit_SSD1306& oled, uint8_t selection);
 void    displayTime(Adafruit_SSD1306& oled, int8_t newHour, int8_t newMinute, bool changingHours);
 void    writeToDisplay(Adafruit_SSD1306& oled, char line1[], char line2[], uint8_t Line1_x, uint8_t Line1_y, uint8_t Line2_x, uint8_t Line2_y);
 void    finished(Adafruit_SSD1306& oled);
+void    displayAlarmTime(Adafruit_SSD1306& oled); 
 
 bool    setNewSound(Adafruit_SSD1306& oled);
 uint8_t getSoundId();  // Returns the current sound ID number

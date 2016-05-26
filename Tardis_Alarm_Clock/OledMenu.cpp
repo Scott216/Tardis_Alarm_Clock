@@ -199,7 +199,7 @@ void Menu::displayTime(Adafruit_SSD1306& oled, int8_t newHour, int8_t newMinute,
 {
   uint8_t newHour12;
   char timebuf[10]; // character buffer for time
-  char buf[3]; // character buffer for hours and minutes
+  char buf[3];      // character buffer for hours and minutes
   
   if (newHour == 0)
   { newHour12 = 12; }  
@@ -233,8 +233,53 @@ void Menu::displayTime(Adafruit_SSD1306& oled, int8_t newHour, int8_t newMinute,
   else
   { Menu::writeToDisplay(oled, "Change Min", timebuf, 0, 0, 13, 18); }
 
-} // Menu::displayTime()
+} //end  Menu::displayTime()
 
+
+// Display the alarm time on OLED
+void Menu::displayAlarmTime(Adafruit_SSD1306& oled)
+{
+
+  uint8_t alarmHr12; 
+  char timebuf[10]; // character buffer for time
+  char buf[3];     // character buffer for hours and minutes
+  
+  uint8_t alarmHr = getAlarmHour();
+  uint8_t alarmMin = getAlarmMinute();
+  
+
+  if (alarmHr == 0)
+  { alarmHr12 = 12; }  
+  else if (alarmHr > 12)
+  { alarmHr12 = alarmHr - 12; } 
+  else
+  { alarmHr12 = alarmHr; }
+
+  itoa(alarmHr12, buf, 10);
+  if (alarmHr12 < 10)
+  { 
+    strcpy(timebuf, "0"); 
+    strcat(timebuf, buf); 
+  }
+  else
+  { strcpy(timebuf, buf); }
+  
+  strcat(timebuf, ":");  
+  itoa(alarmMin, buf, 10);
+  if (alarmMin < 10)
+  { strcat(timebuf, "0");}
+  strcat(timebuf, buf);
+  
+  if (alarmHr < 12)
+  { strcat(timebuf, " AM"); }
+  else
+  { strcat(timebuf, " PM"); }
+
+  Menu::writeToDisplay(oled, "Alarm", timebuf, 0, 0, 0, 18);
+  delay(2000);
+  Menu::finished(oled);  // clear display
+  
+} // end Menu::displayAlarmTime
 
 
 // Pick a new alarm sound
@@ -340,18 +385,14 @@ uint8_t Menu::getClockHour()
 { return oledClockHour;}
 
 
-
-
 // Return the clock minutes 
 uint8_t Menu::getClockMinute()
 { return oledClockMinute;}
 
 
-
 // Return the Alarm hour 
 uint8_t Menu::getAlarmHour()
 { return oledAlarmHour;}
-
 
 
 // Return the Alarm minutes 
@@ -424,6 +465,7 @@ int8_t Menu::PollKey()
   delay(80);
   return Whichkey;
 } // Menu::PollKey()
+
 
 
 

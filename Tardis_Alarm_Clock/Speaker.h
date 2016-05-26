@@ -33,17 +33,18 @@ Sometimes you many need a short delay after you start a song.
 #define TARDIS      0x0000
 #define THEMESONG   0x0001
 #define EXTERMINATE 0x0002
+#define SCREWDRIVER 0x0011
 
-#define BIP1 0x0003 // orig file 26953__xinaesthete__bip1.wav.  Good for menu selection
-#define BIP2 0x0004 // orig file 26953__xinaesthete__bip2.wav. Volume too los
+#define BIP1 0x0003 // orig file 26953__xinaesthete__bip1.wav.  Good for menu selection - NOT USED
+#define BIP2 0x0004 // orig file 26953__xinaesthete__bip2.wav. Volume too low - NOT USED
 #define BIP3 0x0005 // orig file 141121__eternitys__interface1.wav.  Sounds a bit like a click on glass
 #define SOFTWHISTLE 0x0006 // orig file 26955__xinaesthete__bsoft1.wav.  Might be good for select button
-#define CLICK1 0x0007 // 180821__empty-bell__beep.wav Loud metallick click
+#define CLICK1 0x0007 // 180821__empty-bell__beep.wav Loud metallick click - NOT USED
 
 //  These sounds don't sound good on alarm speaker
-#define HELLO_CLARA 0x008 // Hello There Clara.mp3, from Rings of Akhaten timecode 2:30 
-#define CLARA 0x009  // Clara.mp3, Matt Smith saying "Clara", from Bells of St John, timecode 19:22
-#define GOODNIGHT 0x010 // Goodnight Clara.mp3, Matt Smith saying Goodnight Clara, from Rings of Akhaten timecode 42.29
+#define HELLO_CLARA 0x0008  // Hello There Clara.mp3, from Rings of Akhaten timecode 2:30 
+#define CLARA       0x0009  // Clara.mp3, Matt Smith saying "Clara", from Bells of St John, timecode 19:22
+#define GOODNIGHT   0x0010  // Goodnight Clara.mp3, Matt Smith saying Goodnight Clara, from Rings of Akhaten timecode 42.29
 
 
 class AlarmSpeaker

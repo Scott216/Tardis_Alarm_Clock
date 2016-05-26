@@ -20,7 +20,6 @@ class Encoder
     int previousValue();
     void resetValue();  // set encoder value to zero
     bool isTurning(uint32_t timeThreshold);
-    
 
   protected:
     int lastReportedPos;      // change management

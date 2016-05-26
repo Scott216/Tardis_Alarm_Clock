@@ -4,11 +4,14 @@ cd Dropbox/Arduino/Tardis_Alarm_Clock
   
  
 Change Log
-09/23/14 v2.00 - Added version
- 
+09/23/14  v2.00 - Added version
+08/11/15  v2.01 - Changed LED pinouts.  LEDs on center board now use use same pins as LED in encoder handle. Changed ENC_B pin
+                  Pressing encoder pushbutton will display alarm time on OLED (in addition to 7-seg display)
+05/23/16  v2.02 - Changed accelerometer threshold from 300 to 600
+05/25/16  v2.03 - Added #define SCREWDRIVER in Speaker.h
 */
 
-#define VERSION "v2.00"
+#define VERSION "v2.02"
 
 #include <EEPROM.h>
 #include <I2C.h>                         // http://dsscircuits.com/articles/arduino-i2c-master-library.html
@@ -22,35 +25,37 @@ Change Log
 #include "Encoder.h"
 
 
+// This gets rid of compiler warning: Only initialized variables can be placed into program memory area
+#undef PROGMEM
+#define PROGMEM __attribute__(( section(".progmem.data") ))
+
 //  Pro-Mini pin assignments
 #define ENC_A           2  // Encoder input (Interrupt)
-#define PCBLEDBLU       3  // RGB LED on middle PCB Board to light up windows (PWM)
+#define ENC_B           3  // Encoder input (Interrupt)
 #define PUSHBTN         4  // Pushbutton in encoder
-#define PCBLEDGRN       5  // RGB LED on middle PCB Board to light up windows (PWM)
-#define PCBLEDRED       6  // RGB LED on middle PCB Board to light up windows (PWM)
+#define SHAKE           5  // Shake sensor (future use)
 #define SND_DATA        7  // Sound card data input
 #define SND_BUSY        8  // Sound card busy output
-#define ENCRED          9  // RGB LED in encoder (PWM)
-#define ENCGRN         10  // RGB LED in encoder (PWM)
-#define ENCBLU         11  // RGB LED in encoder (PWM)
-#define ENC_B          12  // Encoder input (Interrupt)
+#define LED_RED         9  // RGB LEDs on middle PCB Board and encoder pushbutton (PWM)
+#define LED_GRN        10  // RGB LEDs on middle PCB Board and encoder pushbutton (PWM)
+#define LED_BLU        11  // RGB LEDs on middle PCB Board and encoder pushbutton (PWM)
 #define OLED_RST       13  // OLED reset pin
 
-         
-#define MENU_BTN       0    // Analog 0, Menu pushbutton up 520, dn 693, select 1020
+
+#define MENU_BTN       A0   // Analog 0, Menu pushbutton up 520, dn 693, select 1020
 #define ALARM_ON_PIN   A1   // Alarm On/Off switch
-#define SND_RST        A2   // Sound card Reset input
+#define SND_RST        A2   // Sound card reset input
 #define SND_CLK        A3   // Sound card clock input
 // I2C SDA             A4
 // I2C SCL             A5
-//                     A6   // spare, can't be used as digital output.  Could use this for MENU_BTN input or SND_BUSY input if you want to free up a digital pin
+//                     A6   // Spare, can't be used as digital output.  Could use this for MENU_BTN input or SND_BUSY input if you want to free up a digital pin
 // Photo sensor TBD    A7   // Future use if you want to have a light sensor in order to dim the display
 
 
 #define PB_ON        HIGH   // Encoder pushbutton is on when HIGH
 #define ALARM_ENABLED LOW   // Alarm is enabled when input is low
-#define DISP_CLOCK      1   // display clock time on 7-segment display
-#define DISP_ALARM      2   // display alarm time on 7-segment display
+#define DISP_CLOCK      1   // Display clock time on 7-segment display
+#define DISP_ALARM      2   // Display alarm time on 7-segment display
 #define DISP_ALARM_OFF  3   // Alarm is off, display "OFF"
 
 #define ADDR_ALM_HR     0   // EEPROM address for alarm Hour
@@ -58,6 +63,7 @@ Change Log
 #define ADDR_SOUND      2   // EEPROM address for alarm sound ID
 
 #define I2C_TIMEOUT 30000  // 30 second I2C timeout
+
 
 
 // create objects
@@ -74,8 +80,9 @@ uint8_t alarmHour;
 uint8_t alarmMinute;
 uint8_t snoozeHour;
 uint8_t snoozeMinute;
-uint8_t soundId; // Current sound ID to use for alarm
+uint8_t soundId;      // Current sound ID to use for alarm
 bool isAlarmSilenced; // Keeps alarm from going off after user silenced it
+uint16_t ACCEL_THRESHOLD = 600;  // Accelerometer threshold, the hight the number the harder you have to shake to turn off alarm
 
 // Function Prototypes
 void updateLcdDisplay(uint8_t whichTimeToShow);
@@ -83,22 +90,21 @@ void startMenu();
 void setAlarm(uint8_t alarmH, uint8_t alarmM);
 void pulseRGBLEDs(bool ledsAreOn);
 
-
 //--------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------
 void setup()
 {
   Serial.begin(9600);
+  Serial.print("Version ");
+  Serial.println(VERSION);
   
-  pinMode(PUSHBTN, INPUT);         // rotory encoder pushbutton, needs a PULL-DOWN resistor, P/B is on when HIGH
+  pinMode(PUSHBTN, INPUT);              // Rotory encoder pushbutton, needs a PULL-DOWN resistor, P/B is on when HIGH
   pinMode(ALARM_ON_PIN, INPUT_PULLUP);  // Alarm enable switch
-  pinMode(ENCRED, OUTPUT);        // rotory encoder RGB LED 
-  pinMode(ENCGRN, OUTPUT);        // rotory encoder RGB LED
-  pinMode(ENCBLU, OUTPUT);        // rotory encoder RGB LED
-  pinMode(PCBLEDRED, OUTPUT);     // RGB LED on PCB
-  pinMode(PCBLEDGRN, OUTPUT);     // RGB LED on PCB
-  pinMode(PCBLEDBLU, OUTPUT);     // RGB LED on PCB
-
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_GRN, OUTPUT);
+  pinMode(LED_BLU, OUTPUT);
+  pinMode(SHAKE, INPUT_PULLUP);
+  
 
   I2c.begin();             // Join the bus as a master
   I2c.timeOut(I2C_TIMEOUT);
@@ -129,6 +135,7 @@ void setup()
     EEPROM.write(ADDR_ALM_MN, alarmMinute);
   }
   
+  
   // Read sound ID from EEPROM  
   soundId = EEPROM.read(ADDR_SOUND);
   
@@ -149,9 +156,9 @@ void loop()
   if ( (long)(millis() - dispRefreshTimer) > 0 )
   { 
     now = RTC.now(); // update time
-
     updateLcdDisplay(DISP_CLOCK); 
     dispRefreshTimer = millis() + 1000;
+    
   }
 
   // Check for menu button press
@@ -160,19 +167,24 @@ void loop()
 
 
   // If encoder pushbutton is pressed and alarm is off, then
-  // display alarm setting 
+  // display alarm time  
   if ( digitalRead(PUSHBTN) == PB_ON && Speaker.isBusy() == false )
   {
     if ( digitalRead(ALARM_ON_PIN) == ALARM_ENABLED ) 
     { updateLcdDisplay(DISP_ALARM); }      // alarm is enabled, display alarm time
     else
     { updateLcdDisplay(DISP_ALARM_OFF); }  // alarm is disabled, display "OFF"
-    delay(2000); // keep the alarm time on the display for a little while
+    Menu::displayAlarmTime(display);  // displays time on OLED
+    delay(2000); 
   }
   
   // check for alarm, it will stay on for one minute if not silenced
   if ( now.hour() == alarmHour && now.minute() == alarmMinute && isAlarmSilenced == false && digitalRead(ALARM_ON_PIN) == ALARM_ENABLED )
   {
+    Serial.println("Alarm has triggered");  //srgg
+    Serial.println(Speaker.isBusy());
+    Serial.println(soundId);
+    
     if(Speaker.isBusy() == false)
     {
       Speaker.play(soundId); 
@@ -186,13 +198,13 @@ void loop()
   // User can turn alarm off by:
   //   1 Encoder pushbutton
   //   2 Turn encoder knob
-  //   3 Shake tardis
-  //  There is a problem with shaking the tardis, the speaker is interferring with the accelerometer.  Need some filtering
-  //     IsMovoing has a threshold parameter.  The higher it is the harder you need to shake alarm
+  //   3 Shake Tardis
+  //   4 Turn off alarm switch on bottom
+  // isMovoing has a threshold parameter.  The higher it is the harder you need to shake alarm
   // rotEncoder.isTurning() takes mS as a paremeter.  For example 100mS would return true if knob was turned in the last 100 mS
   if ( isAlarmSouding == true )
   {
-    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(300) || rotEncoder.isTurning(100) )  // SRG Accel is working well becase of speaker
+    if ( digitalRead(PUSHBTN) == PB_ON ||  Accel.isMoving(ACCEL_THRESHOLD) || rotEncoder.isTurning(100) || digitalRead(ALARM_ON_PIN) != ALARM_ENABLED )  
     {
       Speaker.stop();  // turn off sound
       isAlarmSilenced = true; // flag to prevent alarm from coming right back on 
@@ -223,8 +235,8 @@ void loop()
 //--------------------------------------------------------------------------------------------------------
 void updateLcdDisplay(uint8_t whichTimeToShow)
 {
-  int dispTime; // this is an integer with same digits as the time.  If time is 11:30, dispTime = 1130
-  uint8_t brightness;       // used to dim the display
+  int dispTime;             // This is an integer with same digits as the time.  If time is 11:30, dispTime = 1130
+  uint8_t brightness;       // Used to dim the display
   uint8_t dispHr, dispMin;  // holds either clock or alarm hours and minutes
 
 
@@ -335,10 +347,11 @@ void setAlarm(uint8_t alarmH, uint8_t alarmM)
 
 // Pulse RGB light in Encoder know and on PCB
 // LED in encoder is off when PWM is 255
-// LED in PCB is off when PWM is 0
+// LED in PCB is off when PWM is 255
 void pulseRGBLEDs(bool ledsAreOn)
 {
-  const uint8_t ledOff = 255;
+  const uint8_t LEDOFF =  0;
+  const uint8_t LEDON = 255;
   
   static int countAmount;
   static uint8_t redPWMValue;
@@ -358,23 +371,20 @@ void pulseRGBLEDs(bool ledsAreOn)
   else
   { // Turn LEDs off
     countAmount = 5;
-    redPWMValue = ledOff;
-    bluPWMValue = ledOff;
-    grnPWMValue = ledOff;
+    redPWMValue = LEDOFF;
+    bluPWMValue = LEDOFF;
+    grnPWMValue = LEDOFF;
   } 
 
-  // Make LED blue by turing off red and green
-  redPWMValue = ledOff;
-  grnPWMValue = ledOff;
+  // Make LED blue by turning off red and green
+  redPWMValue = LEDOFF;
+  grnPWMValue = LEDOFF;
 
-  analogWrite(ENCRED, redPWMValue);
-  analogWrite(ENCGRN, grnPWMValue);
-  analogWrite(ENCBLU, bluPWMValue);
-  analogWrite(PCBLEDRED, 255 - redPWMValue);
-  analogWrite(PCBLEDGRN, 255 - grnPWMValue);
-  analogWrite(PCBLEDBLU, 255 - bluPWMValue);
+  analogWrite(LED_RED, redPWMValue);
+  analogWrite(LED_GRN, grnPWMValue);
+  analogWrite(LED_BLU, bluPWMValue);
   
-}  // pulseRGBLEDs()
+}  // end pulseRGBLEDs()
 
 
 
